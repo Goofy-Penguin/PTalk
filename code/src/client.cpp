@@ -18,6 +18,7 @@ namespace mainframe {
 
 			// force clean socket
 			sock.close();
+			cleanupThreads();
 
 			if (!sock.create()) return networking::SocketError::invalidSocket;
 			auto conret = sock.connect(host, port);
@@ -184,8 +185,11 @@ namespace mainframe {
 			ret.setName(buff.read<std::string>());
 
 			buff.setlengthFormat(mainframe::networking::LengthType::UInt32);
-			ret.setData(nlohmann::json::from_bson(buff.read<std::vector<uint8_t>>()));
+			auto json = nlohmann::json::from_bson(buff.read<std::vector<uint8_t>>());
+			if (json.find("root") == json.end())
+				return ret;
 
+			ret.setData(std::move(json["root"]));
 			return ret;
 		}
 
@@ -197,7 +201,7 @@ namespace mainframe {
 			buff.write(msg.getName());
 
 			buff.setlengthFormat(mainframe::networking::LengthType::UInt32);
-			buff.write(nlohmann::json::to_bson(msg.getData()));
+			buff.write(nlohmann::json::to_bson({{"root", msg.getData()}}));
 
 			// seek to begin to insert length in front
 			buff.seek(buff.begin());
