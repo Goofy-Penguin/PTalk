@@ -38,7 +38,6 @@ hunter_add_package(fmt)
 hunter_add_package(nlohmann_json)
 
 find_package(fmt REQUIRED)
-find_package(CURL REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 if (WIN32)
