@@ -43,6 +43,7 @@ namespace mainframe {
 
 		void Client::disconnect() {
 			sock.close();
+			onClose();
 		}
 
 		void Client::cleanupThread(std::thread*& thread) {
