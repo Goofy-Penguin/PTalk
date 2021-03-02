@@ -43,6 +43,17 @@ namespace mainframe {
 
 		void Client::disconnect() {
 			sock.close();
+
+			{
+				std::lock_guard<std::mutex> guard(lock);
+
+				for (auto& waiter : replyCallbacks) {
+					waiter.second(MessageIncoming());
+				}
+
+				replyCallbacks.clear();
+			}
+
 			onClose();
 		}
 
@@ -130,18 +141,17 @@ namespace mainframe {
 
 				// if name is empty, it's an reply to an earlier sent message
 				if (msg.getName().empty()) {
-					{
-						std::lock_guard<std::mutex> guard(lock);
-
-						auto reply = replyCallbacks.find(msg.getId());
-						if (reply == replyCallbacks.end()) {
-							disconnect();
-							break;
-						}
-
-						callback = reply->second;
-						replyCallbacks.erase(reply);
+					lock.lock();
+					auto reply = replyCallbacks.find(msg.getId());
+					if (reply == replyCallbacks.end()) {
+						lock.unlock();
+						disconnect();
+						break;
 					}
+
+					callback = reply->second;
+					replyCallbacks.erase(reply);
+					lock.unlock();
 
 					callback(msg);
 					continue;
