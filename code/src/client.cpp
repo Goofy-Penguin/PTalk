@@ -47,8 +47,9 @@ namespace mainframe {
 			{
 				std::lock_guard<std::mutex> guard(lock);
 
+				MessageIncoming emptyMsg;
 				for (auto& waiter : replyCallbacks) {
-					waiter.second(MessageIncoming());
+					waiter.second(emptyMsg);
 				}
 
 				replyCallbacks.clear();
