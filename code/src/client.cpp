@@ -42,6 +42,8 @@ namespace mainframe {
 		}
 
 		void Client::disconnect() {
+			if (sock.state == mainframe::networking::Socket::SockState::skDISCONNECTED) return;
+
 			sock.close();
 
 			{
