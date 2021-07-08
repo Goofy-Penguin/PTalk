@@ -80,6 +80,12 @@ namespace mainframe {
 		}
 
 		void Client::send(const Message& msg, OnMessageCallback replyCallback) {
+			if (sock.state != mainframe::networking::Socket::SockState::skCONNECTED) {
+				MessageIncoming tmpMsg;
+				replyCallback(tmpMsg);
+				return;
+			}
+
 			std::lock_guard<std::mutex> guard(lock);
 
 			toSend.push(msg);
