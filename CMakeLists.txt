@@ -12,6 +12,10 @@ set(BUILD_TESTING OFF)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSPDLOG_FMT_EXTERNAL")
 
+IF(MSVC)
+	SET(CMAKE_CXX_FLAGS "/EHsc")
+ENDIF(MSVC)
+
 # msvsc needs this as cmake doesn't provice for it yet
 # TODO: once cmake supports msvsc std latest remove this
 if (MSVC_VERSION GREATER_EQUAL "1900")
@@ -23,19 +27,32 @@ if (MSVC_VERSION GREATER_EQUAL "1900")
 endif()
 
 # libraries
-FetchContent_Declare(mainframe GIT_REPOSITORY https://github.com/Goofy-Penguin/Mainframe.git)
-FetchContent_MakeAvailable(mainframe)
-
-include("code/cmake/HunterGate.cmake")
-HunterGate(
-	URL "https://github.com/cpp-pm/hunter/archive/v0.23.254.tar.gz"
-	SHA1 "017e688b9848c1f695303e8cfe9f35d40e154112"
-)
+FetchContent_GetProperties(mainframe)
+if(NOT mainframe_POPULATED)
+	FetchContent_Declare(mainframe GIT_REPOSITORY https://github.com/Goofy-Penguin/Mainframe.git)
+	FetchContent_MakeAvailable(mainframe)
+endif()
 
 project ("ptalk" VERSION ${PTALK_VERSION})
 
-hunter_add_package(fmt)
-hunter_add_package(nlohmann_json)
+# conan for libaries
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conan.cmake")
+   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
+                  "${CMAKE_CURRENT_BINARY_DIR}/conan.cmake")
+endif()
+
+include(${CMAKE_CURRENT_BINARY_DIR}/conan.cmake)
+
+if(CMAKE_COMPILER_IS_GNUXX)
+   set(CONAN_SETTINGS compiler.libcxx=libstdc++11)
+endif()
+
+conan_cmake_run(CONANFILE conanfile.txt
+                SETTINGS ${CONAN_SETTINGS}
+                BUILD missing)
+
+include(${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake)
 
 find_package(fmt REQUIRED)
 find_package(nlohmann_json REQUIRED)
