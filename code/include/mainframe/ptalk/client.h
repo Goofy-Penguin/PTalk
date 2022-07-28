@@ -38,7 +38,7 @@ namespace mainframe {
 			bool sendMessage(const Message& msg);
 
 		public:
-			Client() = default;
+			Client(bool ipv6 = false);
 			~Client();
 
 			utils::Event<> onClose;

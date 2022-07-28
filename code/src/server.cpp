@@ -3,20 +3,20 @@
 
 namespace mainframe {
 	namespace ptalk {
+		Server::Server() : sock4(false), sock6(true) {}
+
 		Server::~Server() {
 			stop();
 		}
 
-		bool Server::listen(int port) {
-			if (listening) return false;
+		bool Server::listenClient(networking::Socket& sock, std::thread*& thread, int port) {
 			if (!sock.create()) return false;
 			if (!sock.bind(port)) return false;
 			if (!sock.listen()) return false;
 
-			listening = true;
-			threadListener = new std::thread([this]() {
+			thread = new std::thread([this, &sock]() {
 				while (listening) {
-					auto client = std::make_shared<Client>();
+					auto client = std::make_shared<Client>(false);
 					if (!sock.accept(&client->getSocket())) continue;
 
 					client->setRef(client);
@@ -29,15 +29,35 @@ namespace mainframe {
 			return true;
 		}
 
+		bool Server::listen(int port) {
+			if (listening) return false;
+
+			if (!listenClient(sock4, threadListener4, port) || !listenClient(sock6, threadListener6, port)) {
+				stop();
+				return false;
+			}
+
+			listening = true;
+			return true;
+		}
+
 		void Server::stop() {
 			listening = false;
-			sock.close();
+			sock4.close();
+			sock6.close();
 
-			if (threadListener != nullptr) {
-				if (threadListener->joinable()) threadListener->join();
+			if (threadListener4 != nullptr) {
+				if (threadListener4->joinable()) threadListener4->join();
 
-				delete threadListener;
-				threadListener = nullptr;
+				delete threadListener4;
+				threadListener4 = nullptr;
+			}
+
+			if (threadListener6 != nullptr) {
+				if (threadListener6->joinable()) threadListener6->join();
+
+				delete threadListener6;
+				threadListener6 = nullptr;
 			}
 		}
 	}

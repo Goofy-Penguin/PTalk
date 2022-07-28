@@ -5,6 +5,8 @@
 
 namespace mainframe {
 	namespace ptalk {
+		Client::Client(bool ipv6) : sock(ipv6) {}
+
 		Client::~Client() {
 			disconnect();
 			cleanupThreads();
