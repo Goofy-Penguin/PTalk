@@ -32,7 +32,11 @@ namespace mainframe {
 		bool Server::listen(int port) {
 			if (listening) return false;
 
-			if (!listenClient(sock4, threadListener4, port) && !listenClient(sock6, threadListener6, port)) {
+			int hostingCount = 0;
+			if (listenClient(sock4, threadListener4, port)) hostingCount++;
+			if (listenClient(sock6, threadListener6, port)) hostingCount++;
+
+			if (hostingCount == 0) {
 				stop();
 				return false;
 			}
