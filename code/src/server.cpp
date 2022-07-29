@@ -16,7 +16,7 @@ namespace mainframe {
 
 			thread = new std::thread([this, &sock]() {
 				while (listening) {
-					auto client = std::make_shared<Client>(false);
+					auto client = std::make_shared<Client>(sock.ipv6);
 					if (!sock.accept(&client->getSocket())) continue;
 
 					client->setRef(client);
@@ -31,17 +31,17 @@ namespace mainframe {
 
 		bool Server::listen(int port) {
 			if (listening) return false;
+			listening = true;
 
 			int hostingCount = 0;
 			if (listenClient(sock4, threadListener4, port)) hostingCount++;
-			//if (listenClient(sock6, threadListener6, port)) hostingCount++;
+			if (listenClient(sock6, threadListener6, port)) hostingCount++;
 
 			if (hostingCount == 0) {
 				stop();
 				return false;
 			}
 
-			listening = true;
 			return true;
 		}
 
