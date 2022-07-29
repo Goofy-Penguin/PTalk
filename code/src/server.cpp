@@ -34,7 +34,7 @@ namespace mainframe {
 
 			int hostingCount = 0;
 			if (listenClient(sock4, threadListener4, port)) hostingCount++;
-			if (listenClient(sock6, threadListener6, port)) hostingCount++;
+			//if (listenClient(sock6, threadListener6, port)) hostingCount++;
 
 			if (hostingCount == 0) {
 				stop();
